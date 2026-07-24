@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/22 11:57:16 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/22 15:44:31 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:07:06 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -15,6 +15,7 @@
 #include <string>
 #include <fstream>
 #include <sstream>
+#include <algorithm>
 //these are mtl information
 typedef struct s_mtl
 {
@@ -34,17 +35,19 @@ typedef struct s_mtl
 	int						ppm_witdh;
 	int						ppm_height;
 	std::vector<u_int8_t>	map_kd;
+	std::string				name;
 
 }	t_mtl;
 enum e_mtlType
 {
-	ka = 1,
-	kd = 2,
-	ks = 3,
-	ni = 4,
-	d = 5,
-	ns = 6,
-	map_kd = 7,
+	ka = 0,
+	kd = 1,
+	ks = 2,
+	ni = 3,
+	d = 4,
+	ns = 5,
+	map_kd = 6,
+	newmtl = 7,
 	SKIP = 8
 };
 
@@ -52,6 +55,7 @@ class Mtl
 {
 	private:
 		t_mtl	mtl;
+		std::vector<std::string> existingName;
 	public:
 		Mtl();
 		t_mtl	parse(std::ifstream &file);
@@ -63,6 +67,7 @@ class Mtl
 		void	parseD(std::string line);
 		void	parseNs(std::string line);
 		void	parseMapKd(std::string line);
+		void	parseNewmtl(std::string line);
 		class TheException: public std::exception
 	{
 		private:

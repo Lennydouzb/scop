@@ -6,6 +6,7 @@ SRC_DIR = ./srcs/
 SRCS = main.cpp \
 	   $(SRC_DIR)Obj.cpp \
 	   $(SRC_DIR)GPU.cpp \
+	   $(SRC_DIR)Mtl.cpp \
 	   $(SRC_DIR)Matrix.cpp \
 
 OBJ_DIR = .build/

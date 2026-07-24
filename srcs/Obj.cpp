@@ -6,23 +6,33 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 11:41:05 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/22 18:41:45 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 15:00:06 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/Obj.hpp"
+#include <iterator>
+#include <limits>
 #include <sstream>
 #include <stdio.h>
+#include <climits>
 Obj::Obj()
 {
 	defaultVn = (t_vn){.x =0.0f, .y= 0.0f, .z=0.0f};
 	defaultVt = (t_vt){.x =0.0f, .y= 0.0f};
-	mtl.ka = {0.2f, 0.2f, 0.2f};
-	mtl.kd = {0.8f, 0.8f, 0.8f};
-	mtl.ks = {0.0f, 0.0f, 0.0f};
-	mtl.ni = 1.0f;
-	mtl.d = 1.0f;
-	mtl.ns = 0.0f;
+	emptymtl.ka = {0.2f, 0.2f, 0.2f};
+	emptymtl.kd = {0.8f, 0.8f, 0.8f};
+	emptymtl.ks = {0.0f, 0.0f, 0.0f};
+	emptymtl.ni = 1.0f;
+	emptymtl.d = 1.0f;
+	emptymtl.ns = 0.0f;
+	actualmtl = NULL;
+	this->xMax = std::numeric_limits<float>::min();
+	this->yMax = std::numeric_limits<float>::min();
+	this->zMax = std::numeric_limits<float>::min();
+	this->xMin = std::numeric_limits<float>::max();
+	this->yMin = std::numeric_limits<float>::max();
+	this->zMin = std::numeric_limits<float>::max();
 }
 
 Obj::~Obj()
@@ -52,7 +62,7 @@ std::vector<std::vector<t_facePoint> >& Obj::getFaces()
 
 static int cmpType(std::string type)
 {
-	std::string types[] = {"v", "vt", "vn", "f", "mtllib"};
+	std::string types[] = {"v", "vt", "vn", "f", "mtllib", "usemtl"};
 
 	size_t	i = 0;
 	while (i < 5)
@@ -91,10 +101,15 @@ void	Obj::parser(std::ifstream &file)
 				break;
 			case (MTLLIB):
 				this->parseLibLine(line);
+				break;
+			case (USEMTL):
+				this->parseUsemtlLine(line);
+				break;
 			case (SKIP):
 				break;
 		}
 	}
+	centerVertices();
 	computeNormals();
 }
 
@@ -170,6 +185,7 @@ bool Obj::apply(std::string iV, std::string iVt, std::string iVn, size_t flag)
 	else
 		aPoint.vn = this->verticesNormal[indexVn];
 	aPoint.v = this->vertices[indexV];
+	aPoint.mtl = actualmtl;
 	if (flag == 0)
 	{
 		//new line so new vector
@@ -252,6 +268,18 @@ void	Obj::parseVLine(std::string line)
 		v.b = b;
 		//getting rid of whitespace (trim like)
 		iss >> std::ws;
+		if (v.x < this->xMin)
+			this->xMin = v.x;
+		if (v.y < this->yMin)
+			this->yMin = v.y;
+		if (v.z < this->zMin)
+			this->zMin = v.z;
+		if (v.x > this->xMax)
+			this->xMax = v.x;
+		if (v.y > this->yMax)
+			this->yMax = v.y;
+		if (v.z > this->zMax)
+			this->zMax = v.z;
 		//nothing more no rgb
 		if (iss.eof())
 			this->vertices.push_back(v);
@@ -278,6 +306,47 @@ void	Obj::parseVLine(std::string line)
 		throw Obj::TheException("Bad v line coordinates");
 }
 
+
+ssize_t	Obj::findMtlByName(std::string name)
+{
+	size_t i = 0;
+	for (std::vector<t_mtl>::iterator it = this->mtllib.begin(); it != mtllib.end(); ++it)
+	{
+		if (it->name == name)
+			return(i);
+		++i;
+	}
+	return -1;
+}
+
+void	Obj::parseUsemtlLine(std::string line)
+{
+	std::istringstream	iss(line);
+	std::string type;
+	std::string name;
+	if  (iss >> type >> name)
+	{
+		//getting rid of whitespace (trim like)
+		iss >> std::ws;
+		//nothing more
+		if (iss.eof())
+		{
+			ssize_t index = findMtlByName(name);
+			if (index != -1)
+				actualmtl = &(mtllib[index]);
+			else
+				throw Obj::TheException("usemtl name doesn't exist");
+		}
+		//there is garbage
+		else
+			throw Obj::TheException("Bad vt line");
+
+	}
+	else
+		throw Obj::TheException("Bad vt line coordinates");
+
+
+}
 
 void	Obj::parseVtLine(std::string line)
 {
@@ -335,15 +404,22 @@ void	Obj::parseLibLine(std::string line)
 	std::istringstream	iss(line);
 	std::string type;
 	std::string	fileName;
-	if  (iss >> type >> fileName)
+	bool flag = false;
+	if  (iss >> type)
 	{
-		if (fileName.empty())
-			throw Obj::TheException("mtlliib line filename is empty");
-		std::ifstream mtlFile("resources/" + fileName);
-		if (!mtlFile.is_open())
-			throw Obj::TheException("mtllib line file could not be opened");
-		Mtl Mtl;
-		mtl = Mtl.parse(mtlFile);
+		while (iss >> fileName)
+		{
+			flag = true;
+			if (fileName.empty())
+				throw Obj::TheException("mtlliib line filename is empty");
+			std::ifstream mtlFile("resources/" + fileName);
+			if (!mtlFile.is_open())
+				throw Obj::TheException("mtllib line file could not be opened");
+			Mtl Mtl;
+			mtllib.push_back(Mtl.parse(mtlFile));
+		}
+		if (flag == false)
+			throw Obj::TheException("Bad mtllib line fileName");
 	}
 	else
 		throw Obj::TheException("Bad mtllib line");
@@ -358,6 +434,23 @@ Obj::TheException::TheException(std::string msg)
 const char *Obj::TheException::what() const throw()
 {
 	return this->message.c_str();
+}
+
+void	Obj::centerVertices()
+{
+	float centerX = (this->xMin + this->xMax) / 2.0f;
+	float centerY = (this->yMin + this->yMax) / 2.0f;
+	float centerZ = (this->zMin + this->zMax) / 2.0f;
+	for (std::vector<std::vector<t_facePoint>>::iterator it = this->faces.begin(); it != this->faces.end(); ++it)
+	{
+		for (std::vector<t_facePoint>::iterator it2 = it->begin(); it2 != it->end(); ++it2)
+		{
+			it2->v.x -= centerX;
+			it2->v.y -= centerY;
+			it2->v.z -= centerZ;
+
+		}
+	}
 }
 
 void	Obj::computeNormals()

@@ -6,10 +6,11 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/22 11:58:08 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/22 16:30:08 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 15:05:42 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/Mtl.hpp"
+#include <filesystem>
 #include <stdio.h>
 
 Mtl::Mtl()
@@ -20,14 +21,15 @@ Mtl::Mtl()
 	mtl.ni = 1.0f;
 	mtl.d = 1.0f;
 	mtl.ns = 0.0f;
+	mtl.name = "";
 }
 
 static int cmpType(std::string type)
 {
-	std::string types[] = {"ka", "kd", "ks", "ni", "d", "ns", "map_kd"};
+	std::string types[] = {"Ka", "Kd", "Ks", "Ni", "d", "Ns", "map_kd", "newmtl"};
 
 	size_t	i = 0;
-	while (i < 7)
+	while (i < 8)
 	{
 		if (type == types[i])
 			return i;
@@ -63,15 +65,51 @@ t_mtl Mtl::parse(std::ifstream &file)
 				break;
 			case (d):
 				this->parseD(line);
+				break;
 			case (ns):
 				this->parseNs(line);
+				break;
 			case (map_kd):
 				this->parseMapKd(line);
+				break;
+			case (newmtl):
+				this->parseNewmtl(line);
+				break;
 			case (SKIP):
 				break;
 		}
 	}
+	if (this->mtl.name.empty())
+		throw Mtl::TheException("mtl has no name");
 	return this->mtl;
+}
+
+void	Mtl::parseNewmtl(std::string line)
+{
+	std::istringstream	iss(line);
+	std::string type;
+	std::string name;
+	if  (iss >> type >> name)
+	{
+		//getting rid of whitespace (trim like)
+		iss >> std::ws;
+		//nothing more
+		if (iss.eof())
+		{
+			if (std::find(existingName.begin(), existingName.end(), name) == existingName.end())
+			{
+				this->mtl.name = name;
+				this->existingName.push_back(name);
+			}
+			else
+				throw Mtl::TheException("Bad newmtl line, name already exists");
+		}
+		//there is garbage
+		else
+			throw Mtl::TheException("Bad newmtl line");
+	}
+	else
+		throw Mtl::TheException("Bad newmtl line name");
 }
 
 void Mtl::parseKa(std::string line)
@@ -86,7 +124,7 @@ void Mtl::parseKa(std::string line)
 		//nothing more
 		if (iss.eof())
 		{
-			this->mtl.ka = {a, b, b};
+			this->mtl.ka = {a, b, c};
 		}
 		//there is garbage
 		else
@@ -109,7 +147,7 @@ void Mtl::parseKd(std::string line)
 		//nothing more
 		if (iss.eof())
 		{
-			this->mtl.kd = {a, b, b};
+			this->mtl.kd = {a, b, c};
 		}
 		//there is garbage
 		else
@@ -132,7 +170,7 @@ void Mtl::parseKs(std::string line)
 		//nothing more
 		if (iss.eof())
 		{
-			this->mtl.ks = {a, b, b};
+			this->mtl.ks = {a, b, c};
 		}
 		//there is garbage
 		else
@@ -225,7 +263,7 @@ void Mtl::parseMapKd(std::string line)
 		//nothing more
 		if (iss.eof())
 		{
-			parsePpm(map_kdFileName);
+			parsePpm("resources/"+map_kdFileName);
 		}
 		//there is garbage
 		else
@@ -276,4 +314,14 @@ void Mtl::parsePpm(std::string fileName)
 	size_t size = mtl.ppm_height * mtl.ppm_witdh * 3;
 	mtl.map_kd.resize(size);
 	file.read(reinterpret_cast<char*>(mtl.map_kd.data()), size);
+}
+Mtl::TheException::~TheException() throw(){}
+
+Mtl::TheException::TheException(std::string msg)
+{
+	this->message = msg;
+}
+const char *Mtl::TheException::what() const throw()
+{
+	return this->message.c_str();
 }

@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 10:49:24 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/22 15:30:05 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 14:42:06 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -25,7 +25,8 @@ enum e_typeLine {
 	VT = 1,
 	VN = 2,
 	F = 3,
-	MTLLIB = 4
+	MTLLIB = 4,
+	USEMTL = 5
 };
 
 typedef struct s_v
@@ -56,6 +57,7 @@ typedef struct s_facePoint
 	t_v		v;
 	t_vt	vt;
 	t_vn	vn;
+	t_mtl	*mtl;
 }	t_facePoint;
 
 
@@ -68,13 +70,25 @@ class Obj
 		std::vector<std::vector<t_facePoint> >			faces;
 		t_vn											defaultVn;
 		t_vt											defaultVt;
-		t_mtl											mtl;
+		t_mtl											emptymtl;
+		t_mtl											*actualmtl;
+		std::vector<t_mtl>								mtllib;
+		float											xMax;
+		float											xMin;
+		float											yMax;
+		float											yMin;
+		float											zMax;
+		float											zMin;
+
 		void											parseFLine(std::string line);
 		void											parseVLine(std::string line);
 		void											parseVtLine(std::string line);
 		void											parseVnLine(std::string line);
 		void											parseLibLine(std::string line);
+		void											parseUsemtlLine(std::string line);
 		void											computeNormals();
+		void											centerVertices();
+		ssize_t											findMtlByName(std::string name);
 	public:
 		Obj();
 		~Obj();

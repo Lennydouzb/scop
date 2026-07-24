@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/21 22:19:10 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 12:54:03 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -126,7 +126,7 @@ void GPU::process()
 	GLsizei vertexSize = sizeof(t_glvertex);
 	//configuring where is what
 	/*
-	 * 0 is the GLSL canal (will be poisition, color, normal and texture)
+	 * 0 is the GLSL canal 
 	 * 3 is the size (3 position x y z)
 	 * GL_FLOAT is the type of the args
 	 * GL_FALSE	is to not normalize values (lose diistance information);

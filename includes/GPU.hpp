@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:01:41 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 20:04:39 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 20:56:17 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -25,6 +25,7 @@ typedef struct s_glvertex
 	std::array<float, 3>	kd;	
 	std::array<float, 3>	ks;
 	float					d;
+	float					ns;
 }	t_glvertex;
 
 typedef struct	s_renderSettings

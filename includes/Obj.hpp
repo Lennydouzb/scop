@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 10:49:24 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 14:42:06 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 20:42:19 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -57,7 +57,7 @@ typedef struct s_facePoint
 	t_v		v;
 	t_vt	vt;
 	t_vn	vn;
-	t_mtl	*mtl;
+	t_mtl	mtl;
 }	t_facePoint;
 
 
@@ -71,7 +71,7 @@ class Obj
 		t_vn											defaultVn;
 		t_vt											defaultVt;
 		t_mtl											emptymtl;
-		t_mtl											*actualmtl;
+		t_mtl											actualmtl;
 		std::vector<t_mtl>								mtllib;
 		float											xMax;
 		float											xMin;

@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 19:56:32 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 20:57:23 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -42,6 +42,11 @@ GPU::GPU(Obj &Object)
 
 			vertex.tx = aPoint.vt.x;
 			vertex.ty = aPoint.vt.y;
+			vertex.ka = aPoint.mtl.ka;
+			vertex.kd = aPoint.mtl.kd;
+			vertex.ks = aPoint.mtl.ks;
+			vertex.d = aPoint.mtl.d;
+			vertex.ns = aPoint.mtl.ns;
 			this->vboBuffer.push_back(vertex);
 		}
 	}
@@ -151,12 +156,29 @@ void GPU::process()
 	//texture
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, tx));
 	glEnableVertexAttribArray(3);
+
+	//ka
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ka));
+	glEnableVertexAttribArray(4);
+	
+	//kd
+	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, kd));
+	glEnableVertexAttribArray(5);
+	
+	//ks
+	glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ks));
+	glEnableVertexAttribArray(6);
+
+	//d
+	glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, d));
+	glEnableVertexAttribArray(7);
+	//ns
+	glVertexAttribPointer(8, 1, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ns));
+	glEnableVertexAttribArray(8);
+	
+
 	GLint mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
 	GLint RotLoc = glGetUniformLocation(shaderProgram, "rotation");
-	GLint kaLoc = glGetUniformLocation(shaderProgram, "ka");
-	GLint kdLoc = glGetUniformLocation(shaderProgram, "kd");
-	GLint ksLoc = glGetUniformLocation(shaderProgram, "ks");
-	GLint dLoc = glGetUniformLocation(shaderProgram, "d");
 	//end of config
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -263,13 +285,13 @@ void	GPU::processInput()
 
 void GPU::loadShaderCodes() 
 {
-	std::ifstream fileFs("srcs/shaders/fragmentShader.fs");
+	std::ifstream fileFs("srcs/shaders/fragmentShader.frag");
 	if (!fileFs.is_open())
 		throw GPU::TheException("Couldn't load fragment shader file");
 	std::stringstream bufferFs;
 	bufferFs << fileFs.rdbuf();
 	this->fragmentShader = bufferFs.str();
-	std::ifstream fileVs("srcs/shaders/vertexShader.vs");
+	std::ifstream fileVs("srcs/shaders/vertexShader.vert");
 	if (!fileVs.is_open())
 		throw GPU::TheException("Couldn't load vertex shader file");
 	std::stringstream bufferVs;

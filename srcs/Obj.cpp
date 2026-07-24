@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 11:41:05 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 15:00:06 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 20:43:05 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,7 +26,7 @@ Obj::Obj()
 	emptymtl.ni = 1.0f;
 	emptymtl.d = 1.0f;
 	emptymtl.ns = 0.0f;
-	actualmtl = NULL;
+	actualmtl = emptymtl;
 	this->xMax = std::numeric_limits<float>::min();
 	this->yMax = std::numeric_limits<float>::min();
 	this->zMax = std::numeric_limits<float>::min();
@@ -333,7 +333,7 @@ void	Obj::parseUsemtlLine(std::string line)
 		{
 			ssize_t index = findMtlByName(name);
 			if (index != -1)
-				actualmtl = &(mtllib[index]);
+				actualmtl = mtllib[index];
 			else
 				throw Obj::TheException("usemtl name doesn't exist");
 		}

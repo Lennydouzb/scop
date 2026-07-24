@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 12:54:03 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/24 19:56:32 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -71,6 +71,8 @@ GPU::GPU(Obj &Object)
 	if (glewInit() != GLEW_OK)
 		throw GPU::TheException("glew initalization did not work");
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
 void GPU::process()
@@ -151,6 +153,10 @@ void GPU::process()
 	glEnableVertexAttribArray(3);
 	GLint mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
 	GLint RotLoc = glGetUniformLocation(shaderProgram, "rotation");
+	GLint kaLoc = glGetUniformLocation(shaderProgram, "ka");
+	GLint kdLoc = glGetUniformLocation(shaderProgram, "kd");
+	GLint ksLoc = glGetUniformLocation(shaderProgram, "ks");
+	GLint dLoc = glGetUniformLocation(shaderProgram, "d");
 	//end of config
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);

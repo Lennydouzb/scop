@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:01:41 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 20:56:17 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 00:37:57 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -56,7 +56,7 @@ class GPU
 	public:
 		~GPU();
 		GPU(Obj &);
-		void		process();
+		void		process(Obj &myObj);
 		void		loadShaderCodes();
 		void		processInput();
 	class TheException: public std::exception

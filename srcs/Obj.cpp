@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 11:41:05 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 20:43:05 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 01:34:31 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <sstream>
 #include <stdio.h>
 #include <climits>
+#include <sys/types.h>
 Obj::Obj()
 {
 	defaultVn = (t_vn){.x =0.0f, .y= 0.0f, .z=0.0f};
@@ -33,6 +34,7 @@ Obj::Obj()
 	this->xMin = std::numeric_limits<float>::max();
 	this->yMin = std::numeric_limits<float>::max();
 	this->zMin = std::numeric_limits<float>::max();
+	sameMtlFaceCounter = 0;
 }
 
 Obj::~Obj()
@@ -108,6 +110,11 @@ void	Obj::parser(std::ifstream &file)
 			case (SKIP):
 				break;
 		}
+	}
+	if (sameMtlFaceCounter > 0)
+	{
+		indexesOfMtlSwicth.push_back(sameMtlFaceCounter * 3);
+		sameMtlFaceCounter = 0;
 	}
 	centerVertices();
 	computeNormals();
@@ -192,6 +199,7 @@ bool Obj::apply(std::string iV, std::string iVt, std::string iVn, size_t flag)
 		std::vector<t_facePoint> tmp;
 		this->faces.push_back(tmp);
 		this->faces.back().push_back(aPoint);
+		sameMtlFaceCounter +=1;
 	}
 	else if (flag > 0 && flag < 3)
 	{
@@ -209,7 +217,7 @@ bool Obj::apply(std::string iV, std::string iVt, std::string iVn, size_t flag)
 		this->faces.back().push_back(firstPoint);
 		this->faces.back().push_back(lastPoint);
 		this->faces.back().push_back(aPoint);
-
+		sameMtlFaceCounter += 1;
 	}
 	return true;
 }
@@ -309,7 +317,7 @@ void	Obj::parseVLine(std::string line)
 
 ssize_t	Obj::findMtlByName(std::string name)
 {
-	size_t i = 0;
+	ssize_t i = 0;
 	for (std::vector<t_mtl>::iterator it = this->mtllib.begin(); it != mtllib.end(); ++it)
 	{
 		if (it->name == name)
@@ -332,8 +340,15 @@ void	Obj::parseUsemtlLine(std::string line)
 		if (iss.eof())
 		{
 			ssize_t index = findMtlByName(name);
-			if (index != -1)
+			if (index != -1 && index < (ssize_t)mtllib.size())
+			{
 				actualmtl = mtllib[index];
+				if (sameMtlFaceCounter > 0)
+				{
+					this->indexesOfMtlSwicth.push_back(sameMtlFaceCounter * 3);
+					sameMtlFaceCounter = 0;
+				}
+			}
 			else
 				throw Obj::TheException("usemtl name doesn't exist");
 		}
@@ -416,7 +431,8 @@ void	Obj::parseLibLine(std::string line)
 			if (!mtlFile.is_open())
 				throw Obj::TheException("mtllib line file could not be opened");
 			Mtl Mtl;
-			mtllib.push_back(Mtl.parse(mtlFile));
+			std::vector<t_mtl> mtls = Mtl.parse(mtlFile);
+			this->mtllib.insert(this->mtllib.end(), mtls.begin(), mtls.end());
 		}
 		if (flag == false)
 			throw Obj::TheException("Bad mtllib line fileName");

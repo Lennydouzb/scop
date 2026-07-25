@@ -1,23 +1,31 @@
-#version 410 core
-
+#version 330 core
 
 in vec3 aNormal;
 in vec3 aColor;
 in vec3 fragPos;
 
 out vec4 fragmentColor;
-layout (location = 4) in vec3 ka;
-layout (location = 5) vec3 kd;
-layout (location = 6) vec3 ks;
-layout (location = 7) float d;
-layout (location = 8) float ns;
-void	main()
+
+uniform vec3 ka;
+uniform vec3 kd;
+uniform vec3 ks;
+uniform float d;
+uniform float ns;
+
+void main()
 {
-	vec3 light = normalize(vec3(0.4,0.6, 1.0));
-	// dot returns 1 if in front of light, 0 if not,
-	vec3 diffuse = max(dot(aNormal, light), 0.0) * (kd * aColor);
-	vec3 ambiant = (ka * aColor);
-	vec3 specular = pow(max(dot(normalize(-fragPos), reflect(-light, aNormal)), 0.0), ns) * ks;
-	//apply the light effect
-	fragmentColor = vec4(diffuse + ambiant + specular, d);
+    vec3 light = normalize(vec3(0.4, 0.6, 1.0));
+    vec3 ambiant = max(ka, vec3(0.15)) * aColor;
+    float diffImpact = max(dot(aNormal, light), 0.0);
+    vec3 diffuse = diffImpact * (kd * aColor);
+    
+    vec3 specular = vec3(0.0);
+	//only if enlighted
+    if (diffImpact > 0.0 && ns > 0.0)
+    {
+        float specImpact = max(dot(normalize(-fragPos), reflect(-light, aNormal)), 0.0);
+        specular = pow(specImpact, ns) * ks;
+    }
+    
+    fragmentColor = vec4(diffuse + ambiant + specular, d);
 }

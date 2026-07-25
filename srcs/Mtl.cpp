@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/22 11:58:08 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 15:05:42 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 01:42:02 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/Mtl.hpp"
@@ -38,11 +38,12 @@ static int cmpType(std::string type)
 	return SKIP;
 }
 
-t_mtl Mtl::parse(std::ifstream &file)
+std::vector<t_mtl> Mtl::parse(std::ifstream &file)
 {
 	std::string			line;
 	std::string			type;
-
+	bool				first = true;
+	std::vector<t_mtl>	res;
 	while (std::getline(file, line))
 	{
 		std::istringstream	iss(line);
@@ -73,15 +74,21 @@ t_mtl Mtl::parse(std::ifstream &file)
 				this->parseMapKd(line);
 				break;
 			case (newmtl):
+				if (!first)
+					res.push_back(this->mtl);
+				first = false;
+				this->mtl = (t_mtl){.ka={0.2f,0.2f,0.2f}, .kd={0.8f,0.8f,0.8f}, .ks={0.0f,0.0f,0.0f}, .ni=1.0f, .d=1.0f, .ns=0.0f, .ppm_witdh=0, .ppm_height=0, .map_kd={}, .name=""};
 				this->parseNewmtl(line);
 				break;
 			case (SKIP):
 				break;
 		}
 	}
-	if (this->mtl.name.empty())
-		throw Mtl::TheException("mtl has no name");
-	return this->mtl;
+	if (!first)
+        res.push_back(this->mtl);
+	else
+		throw Mtl::TheException("No mtl defined");
+	return res;
 }
 
 void	Mtl::parseNewmtl(std::string line)

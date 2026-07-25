@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/22 11:57:16 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 14:07:06 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 01:30:52 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -31,7 +31,6 @@ typedef struct s_mtl
 	float					d;
 	//shinyness
 	float					ns;
-
 	int						ppm_witdh;
 	int						ppm_height;
 	std::vector<u_int8_t>	map_kd;
@@ -58,7 +57,7 @@ class Mtl
 		std::vector<std::string> existingName;
 	public:
 		Mtl();
-		t_mtl	parse(std::ifstream &file);
+		std::vector<t_mtl>	parse(std::ifstream &file);
 		void	parsePpm(std::string fileName);
 		void	parseKa(std::string line);
 		void	parseKd(std::string line);

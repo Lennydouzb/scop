@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 10:35:21 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 11:04:24 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 00:48:11 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include <exception>
@@ -38,7 +38,7 @@ int	main(int ac, char **av)
 		myObj.parser(objFile);
 		GPU myGPU(myObj);
 		myGPU.loadShaderCodes();
-		myGPU.process();
+		myGPU.process(myObj);
 	}catch(std::exception &e)
 	{
 		std::cerr << e.what() << std::endl;

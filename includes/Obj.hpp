@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 10:49:24 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 20:42:19 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 00:34:46 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -97,6 +97,8 @@ class Obj
 		std::vector<t_vn>&								getVerticesNormal();
 		std::vector<t_vt>&								getVerticesTexture();
 		std::vector<std::vector<t_facePoint> >&			getFaces();
+		std::vector<size_t>								indexesOfMtlSwicth;
+		size_t											sameMtlFaceCounter;
 		void											parser(std::ifstream &file);
 		class TheException: public std::exception
 		{

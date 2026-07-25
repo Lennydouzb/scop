@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/24 20:57:23 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 01:07:37 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -23,6 +23,7 @@ GPU::~GPU(){}
 GPU::GPU(Obj &Object)
 {
 	std::vector<std::vector<t_facePoint> >& faces = Object.getFaces();
+
 	for (size_t i = 0; i < faces.size(); ++i)
 	{
 		for (size_t j = 0; j < faces[i].size(); ++j)
@@ -80,7 +81,7 @@ GPU::GPU(Obj &Object)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void GPU::process()
+void GPU::process(Obj &myObj)
 {
 	const char *strVertexShader = this->vertexShader.c_str();
 	const char *strFragmentShader = this->fragmentShader.c_str();
@@ -157,28 +158,13 @@ void GPU::process()
 	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, tx));
 	glEnableVertexAttribArray(3);
 
-	//ka
-	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ka));
-	glEnableVertexAttribArray(4);
-	
-	//kd
-	glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, kd));
-	glEnableVertexAttribArray(5);
-	
-	//ks
-	glVertexAttribPointer(6, 3, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ks));
-	glEnableVertexAttribArray(6);
-
-	//d
-	glVertexAttribPointer(7, 1, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, d));
-	glEnableVertexAttribArray(7);
-	//ns
-	glVertexAttribPointer(8, 1, GL_FLOAT, GL_FALSE, vertexSize, (void *)offsetof(t_glvertex, ns));
-	glEnableVertexAttribArray(8);
-	
-
 	GLint mvpLoc = glGetUniformLocation(shaderProgram, "mvp");
 	GLint RotLoc = glGetUniformLocation(shaderProgram, "rotation");
+	GLint kaLoc = glGetUniformLocation(shaderProgram, "ka");
+	GLint kdLoc = glGetUniformLocation(shaderProgram, "kd");
+	GLint ksLoc = glGetUniformLocation(shaderProgram, "ks");
+	GLint nsLoc = glGetUniformLocation(shaderProgram, "ns");
+	GLint dLoc = glGetUniformLocation(shaderProgram, "d");
 	//end of config
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -211,7 +197,19 @@ void GPU::process()
 		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, mvp.data());
 		glUniformMatrix4fv(RotLoc, 1, GL_FALSE, rot.data());
 		glBindVertexArray(vao);
-		glDrawArrays(GL_TRIANGLES, 0, vboBuffer.size());
+		//we do "grouped" mtl draw so we dont send every single vertice with the mtl in "in" in vertexShader 
+		//but all in group directly into fragmentShader, for optimisation
+		size_t previousIndexes = 0;
+		for (std::vector<size_t>::iterator it = myObj.indexesOfMtlSwicth.begin(); it != myObj.indexesOfMtlSwicth.end(); ++it)
+		{	
+			glUniform3fv(kdLoc, 1, vboBuffer[previousIndexes].kd.data());
+			glUniform3fv(ksLoc, 1, vboBuffer[previousIndexes].ks.data());
+			glUniform3fv(kaLoc, 1, vboBuffer[previousIndexes].ka.data());
+			glUniform1f(nsLoc, vboBuffer[previousIndexes].ns);
+			glUniform1f(dLoc, vboBuffer[previousIndexes].d);
+			glDrawArrays(GL_TRIANGLES, previousIndexes, *it);
+			previousIndexes += *it;
+		}
 		glBindVertexArray(0);
 		glfwSwapBuffers(window);
 		glUseProgram(0);

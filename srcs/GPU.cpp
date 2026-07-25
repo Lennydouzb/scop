@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 15:05:28 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 15:38:21 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,7 +18,18 @@
 GPU::GPU(){}
 
 
-GPU::~GPU(){}
+GPU::~GPU()
+{
+	if (this->vao != 0)
+        glDeleteVertexArrays(1, &this->vao);
+    if (this->vbo != 0)
+        glDeleteBuffers(1, &this->vbo);
+	if (this->window)
+    {
+        glfwDestroyWindow(this->window);
+    }
+    glfwTerminate();
+}
 
 GPU::GPU(Obj &Object)
 {	unsigned char whitePixel[3] = {255, 255, 255};

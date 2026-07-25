@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 11:41:05 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 01:34:31 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 14:35:59 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,7 +67,7 @@ static int cmpType(std::string type)
 	std::string types[] = {"v", "vt", "vn", "f", "mtllib", "usemtl"};
 
 	size_t	i = 0;
-	while (i < 5)
+	while (i < 6)
 	{
 		if (type == types[i])
 			return i;
@@ -118,6 +118,8 @@ void	Obj::parser(std::ifstream &file)
 	}
 	centerVertices();
 	computeNormals();
+	if (this->verticesTexture.empty())
+		computeTexture();
 }
 
 bool Obj::apply(std::string iV, std::string iVt, std::string iVn, size_t flag)
@@ -265,7 +267,7 @@ void	Obj::parseVLine(std::string line)
 	std::istringstream	iss(line);
 	std::string type;
 	t_v v;
-	float x, y, z, r = 255.0f ,g = 255.0f, b = 255.0f;
+	float x, y, z, r = -1.0f ,g = -1.0f, b = -1.0f;
 	if  (iss >> type >> x >> y >> z)
 	{
 		v.x = x;
@@ -342,7 +344,7 @@ void	Obj::parseUsemtlLine(std::string line)
 			ssize_t index = findMtlByName(name);
 			if (index != -1 && index < (ssize_t)mtllib.size())
 			{
-				actualmtl = mtllib[index];
+				this->actualmtl = mtllib[index];
 				if (sameMtlFaceCounter > 0)
 				{
 					this->indexesOfMtlSwicth.push_back(sameMtlFaceCounter * 3);
@@ -467,6 +469,28 @@ void	Obj::centerVertices()
 
 		}
 	}
+}
+
+void	Obj::computeTexture()
+{
+	for (size_t i = 0; i < faces.size(); ++i)
+	{
+		for (size_t j = 0; j < faces[i].size(); ++j)
+		{
+			t_facePoint &p = faces[i][j];
+			float r = sqrt(p.v.x * p.v.x + p.v.y * p.v.y + p.v.z * p.v.z);
+			if (r > 0.0)
+			{
+				float nx = p.v.x / r;
+				float ny = p.v.y / r;
+				float nz = p.v.z / r;
+
+				p.vt.x = 0.5 + (std::atan2(nz, nx) / (M_PI * 2.0));
+				p.vt.y = 0.5 - (std::asin(ny) / M_PI);
+			}
+		}
+	}
+
 }
 
 void	Obj::computeNormals()

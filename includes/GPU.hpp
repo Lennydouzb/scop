@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:01:41 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 00:37:57 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 15:05:07 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -26,6 +26,7 @@ typedef struct s_glvertex
 	std::array<float, 3>	ks;
 	float					d;
 	float					ns;
+	GLuint					texId;
 }	t_glvertex;
 
 typedef struct	s_renderSettings
@@ -40,6 +41,8 @@ typedef struct	s_renderSettings
 	float					ObjRx;
 	float					ObjRy;
 	float					ObjRz;
+	int						texturedView;
+	bool					key1Released;
 }	t_renderSettings;
 
 class GPU

@@ -6,14 +6,14 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 20:26:55 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 01:07:37 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 15:05:28 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../includes/GPU.hpp"
 #include "../includes/Matrix.hpp"
 #include <GLFW/glfw3.h>
-#include <utility>
+#include <map>
 
 GPU::GPU(){}
 
@@ -21,46 +21,7 @@ GPU::GPU(){}
 GPU::~GPU(){}
 
 GPU::GPU(Obj &Object)
-{
-	std::vector<std::vector<t_facePoint> >& faces = Object.getFaces();
-
-	for (size_t i = 0; i < faces.size(); ++i)
-	{
-		for (size_t j = 0; j < faces[i].size(); ++j)
-		{
-			t_facePoint aPoint = faces[i][j];
-			t_glvertex vertex;
-			vertex.x = aPoint.v.x;
-			vertex.y = aPoint.v.y;
-			vertex.z = aPoint.v.z;
-			vertex.r = aPoint.v.r / 255.0f;
-			vertex.g = aPoint.v.g / 255.0f;
-			vertex.b = aPoint.v.b / 255.0f;
-
-			vertex.nx = aPoint.vn.x;
-			vertex.ny = aPoint.vn.y;
-			vertex.nz = aPoint.vn.z;
-
-			vertex.tx = aPoint.vt.x;
-			vertex.ty = aPoint.vt.y;
-			vertex.ka = aPoint.mtl.ka;
-			vertex.kd = aPoint.mtl.kd;
-			vertex.ks = aPoint.mtl.ks;
-			vertex.d = aPoint.mtl.d;
-			vertex.ns = aPoint.mtl.ns;
-			this->vboBuffer.push_back(vertex);
-		}
-	}
-	mySettings.cameraPos = {0.0f, 0.0f, 3.0f};
-	mySettings.up = {0.0f, 1.0f, 0.0f};
-	mySettings.cameraFront = {0.0f, 0.0f, -1.0f};
-	mySettings.scale = 1.0f;
-	mySettings.translate = {0.0f, 0.0f, 0.0f};
-	mySettings.rx = 0.0f;
-	mySettings.ry = -90.0f;
-	mySettings.ObjRx = 0;
-	mySettings.ObjRy = 0;
-	mySettings.ObjRz = 0;
+{	unsigned char whitePixel[3] = {255, 255, 255};
 	if (!glfwInit())
 		throw GPU::TheException("initialization did not work");
 
@@ -79,6 +40,86 @@ GPU::GPU(Obj &Object)
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//white texture for default	
+	GLuint defaultWhiteTexID;
+	glGenTextures(1, &defaultWhiteTexID);
+	glBindTexture(GL_TEXTURE_2D, defaultWhiteTexID);
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, whitePixel);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	std::vector<std::vector<t_facePoint> >& faces = Object.getFaces();
+	std::map<std::string, GLuint> alreadyPushed;
+	for (size_t i = 0; i < faces.size(); ++i)
+	{
+		for (size_t j = 0; j < faces[i].size(); ++j)
+		{
+			t_facePoint aPoint = faces[i][j];
+			t_glvertex vertex;
+			vertex.x = aPoint.v.x;
+			vertex.y = aPoint.v.y;
+			vertex.z = aPoint.v.z;
+			if (aPoint.v.r < 0)
+			{
+				vertex.r = aPoint.v.r;
+				vertex.g = aPoint.v.g;
+				vertex.b = aPoint.v.b;
+			}
+			else
+			{
+				vertex.r = aPoint.v.r / 255.0f;
+				vertex.g = aPoint.v.g / 255.0f;
+				vertex.b = aPoint.v.b / 255.0f;
+			}
+			vertex.nx = aPoint.vn.x;
+			vertex.ny = aPoint.vn.y;
+			vertex.nz = aPoint.vn.z;
+
+			vertex.tx = aPoint.vt.x;
+			vertex.ty = aPoint.vt.y;
+			vertex.ka = aPoint.mtl.ka;
+			vertex.kd = aPoint.mtl.kd;
+			vertex.ks = aPoint.mtl.ks;
+			vertex.d = aPoint.mtl.d;
+			vertex.ns = aPoint.mtl.ns;
+			if (!aPoint.mtl.map_kd.empty())
+			{
+				std::string mtlName = aPoint.mtl.name;
+				if (alreadyPushed.find(mtlName) == alreadyPushed.end())
+				{
+					GLuint texId;
+					glGenTextures(1, &texId);
+					glBindTexture(GL_TEXTURE_2D, texId);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+					glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, aPoint.mtl.ppm_witdh, aPoint.mtl.ppm_height, 0, GL_RGB, GL_UNSIGNED_BYTE, aPoint.mtl.map_kd.data());
+					glGenerateMipmap(GL_TEXTURE_2D);
+					glBindTexture(GL_TEXTURE_2D, 0);
+					alreadyPushed[mtlName] = texId;
+				}
+				vertex.texId = alreadyPushed[mtlName];
+			}
+			else
+				vertex.texId = defaultWhiteTexID;
+			this->vboBuffer.push_back(vertex);
+		}
+	}
+	mySettings.cameraPos = {0.0f, 0.0f, 3.0f};
+	mySettings.up = {0.0f, 1.0f, 0.0f};
+	mySettings.cameraFront = {0.0f, 0.0f, -1.0f};
+	mySettings.scale = 1.0f;
+	mySettings.translate = {0.0f, 0.0f, 0.0f};
+	mySettings.rx = 0.0f;
+	mySettings.ry = -90.0f;
+	mySettings.ObjRx = 0;
+	mySettings.ObjRy = 0;
+	mySettings.ObjRz = 0;
+	mySettings.texturedView = 0;
+	mySettings.key1Released = true;
 }
 
 void GPU::process(Obj &myObj)
@@ -117,7 +158,7 @@ void GPU::process(Obj &myObj)
 
 	glLinkProgram(shaderProgram);
 
-	//cleaning
+	//cleaning/
 	glDeleteShader(vertexShader);
 	glDeleteShader(fragmentShader);
 
@@ -165,6 +206,8 @@ void GPU::process(Obj &myObj)
 	GLint ksLoc = glGetUniformLocation(shaderProgram, "ks");
 	GLint nsLoc = glGetUniformLocation(shaderProgram, "ns");
 	GLint dLoc = glGetUniformLocation(shaderProgram, "d");
+	GLint texLoc = glGetUniformLocation(shaderProgram, "tex");
+	GLint texViewLoc = glGetUniformLocation(shaderProgram, "isTextured");
 	//end of config
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -176,7 +219,7 @@ void GPU::process(Obj &myObj)
 
 		std::array<float, 16> scale = Matrix::getScale(mySettings.scale);
 		std::array<float, 16> trans = Matrix::getTranslate(mySettings.translate[0], mySettings.translate[1], mySettings.translate[2]);
-	
+
 		std::array<float, 3> camRight = Matrix::normalize(Matrix::cross(mySettings.cameraFront, mySettings.up));
 		std::array<float, 3> camUp = Matrix::normalize(Matrix::cross(camRight, mySettings.cameraFront));
 		std::array<float, 16> view = Matrix::getLookAt(camUp, mySettings.cameraFront, camRight, mySettings.cameraPos);
@@ -192,21 +235,26 @@ void GPU::process(Obj &myObj)
 		glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(shaderProgram);
-		
+
 		// "send" mvp matrix to the vertex shader
 		glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, mvp.data());
 		glUniformMatrix4fv(RotLoc, 1, GL_FALSE, rot.data());
+		glUniform1i(texViewLoc, mySettings.texturedView);
 		glBindVertexArray(vao);
 		//we do "grouped" mtl draw so we dont send every single vertice with the mtl in "in" in vertexShader 
 		//but all in group directly into fragmentShader, for optimisation
 		size_t previousIndexes = 0;
 		for (std::vector<size_t>::iterator it = myObj.indexesOfMtlSwicth.begin(); it != myObj.indexesOfMtlSwicth.end(); ++it)
 		{	
+
 			glUniform3fv(kdLoc, 1, vboBuffer[previousIndexes].kd.data());
 			glUniform3fv(ksLoc, 1, vboBuffer[previousIndexes].ks.data());
 			glUniform3fv(kaLoc, 1, vboBuffer[previousIndexes].ka.data());
 			glUniform1f(nsLoc, vboBuffer[previousIndexes].ns);
 			glUniform1f(dLoc, vboBuffer[previousIndexes].d);
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, vboBuffer[previousIndexes].texId);
+			glUniform1i(texLoc, 0);
 			glDrawArrays(GL_TRIANGLES, previousIndexes, *it);
 			previousIndexes += *it;
 		}
@@ -232,6 +280,16 @@ void	GPU::processInput()
 		mySettings.scale += 0.1f;
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		mySettings.scale -= 0.1f;
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_RELEASE)
+		mySettings.key1Released =  true;
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS && mySettings.key1Released)
+	{
+		if (mySettings.texturedView == 0)
+			mySettings.texturedView = 1;
+		else
+			mySettings.texturedView = 0;
+		mySettings.key1Released = false;
+	}
 
 	if (mySettings.rx > 89.0f)
 		mySettings.rx = 89.0f;
@@ -253,7 +311,7 @@ void	GPU::processInput()
 	std::array<float, 3> mvRight = Matrix::multiply(camRight, camSpeed);
 	std::array<float, 3> mvUp = Matrix::multiply(mySettings.up, camSpeed);
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
+		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		mySettings.cameraPos = Matrix::add(mySettings.cameraPos, mvForward);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)

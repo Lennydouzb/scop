@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/22 11:58:08 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 01:42:02 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 14:23:09 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #include "../includes/Mtl.hpp"
@@ -26,7 +26,7 @@ Mtl::Mtl()
 
 static int cmpType(std::string type)
 {
-	std::string types[] = {"Ka", "Kd", "Ks", "Ni", "d", "Ns", "map_kd", "newmtl"};
+	std::string types[] = {"Ka", "Kd", "Ks", "Ni", "d", "Ns", "map_Kd", "newmtl"};
 
 	size_t	i = 0;
 	while (i < 8)
@@ -302,11 +302,12 @@ void Mtl::parsePpm(std::string fileName)
 	{
         throw std::runtime_error("could not open " + fileName);
     }
+	skipComment(file);
 	std::string version;
 	if (!(file >> version))
-		Mtl::TheException("There was an error during ppm parsing");
+		throw Mtl::TheException("There was an error during ppm parsing");
 	if (version != "P6")
-		Mtl::TheException("PPM file incorrect version, only P6 is managed");
+		throw Mtl::TheException("PPM file incorrect version, only P6 is managed");
 	skipComment(file);
 	file >> mtl.ppm_witdh;
 	skipComment(file);

@@ -6,7 +6,7 @@
 /*   By: ldesboui <ldesboui@42angouleme.fr>         +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/20 10:49:24 by ldesboui          #+#    #+#             */
-/*   Updated: 2026/07/25 00:34:46 by ldesboui         ###   ########.fr       */
+/*   Updated: 2026/07/25 11:43:20 by ldesboui         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 #pragma once
@@ -88,6 +88,7 @@ class Obj
 		void											parseUsemtlLine(std::string line);
 		void											computeNormals();
 		void											centerVertices();
+		void											computeTexture();
 		ssize_t											findMtlByName(std::string name);
 	public:
 		Obj();
